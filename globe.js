@@ -123,6 +123,13 @@
           if(center && Number(entry.count)>0) marked.push({lon:center[0],lat:center[1],count:entry.count});
         }
       }
+      if (speed === 0 && marked.length) {
+        // Static globe (reduced motion): face the busiest location and repaint once so the dots show.
+        const top = marked.reduce((a,b) => (b.count > a.count ? b : a), marked[0]);
+        offset = top.lon * Math.PI/180;
+        lastPaint = 0;
+        requestAnimationFrame(draw);
+      }
       const countries=list.filter(item => item.country!=='XX' && Number(item.count)>0).length;
       const cityCount=cities.filter(c => c.city && c.city!=='Unknown').length;
       summary.textContent=data.visits.toLocaleString()+' visits · '+countries+' countries'+(cityCount ? ' · '+cityCount+' cities' : '');
