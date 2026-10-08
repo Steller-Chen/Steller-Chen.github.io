@@ -49,10 +49,12 @@ function json(obj, status, headers) {
   return new Response(JSON.stringify(obj), { status, headers });
 }
 
+const TABLE = 'city_visits';
+
 async function ensureTable(db) {
   await db
     .prepare(
-      'CREATE TABLE IF NOT EXISTS visits (' +
+      `CREATE TABLE IF NOT EXISTS ${TABLE} (` +
         'country TEXT NOT NULL, ' +
         'city TEXT NOT NULL, ' +
         'lat REAL, ' +
@@ -62,11 +64,26 @@ async function ensureTable(db) {
         'PRIMARY KEY (country, city))'
     )
     .run();
+  // One-time migration from the earlier country-only schema (table "visits"):
+  // its totals are kept as city "Unknown" so nothing already counted is lost.
+  const legacy = await db
+    .prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'visits'")
+    .first();
+  if (legacy) {
+    await db
+      .prepare(
+        `INSERT INTO ${TABLE} (country, city, lat, lon, count, updated_at) ` +
+          "SELECT country, 'Unknown', NULL, NULL, count, updated_at FROM visits " +
+          'ON CONFLICT(country, city) DO UPDATE SET count = count + excluded.count'
+      )
+      .run();
+    await db.prepare('DROP TABLE visits').run();
+  }
 }
 
 async function readStats(db) {
   const { results } = await db
-    .prepare('SELECT country, city, lat, lon, count FROM visits WHERE count > 0 ORDER BY count DESC')
+    .prepare(`SELECT country, city, lat, lon, count FROM ${TABLE} WHERE count > 0 ORDER BY count DESC`)
     .all();
   const rows = results || [];
   const byCountry = new Map();
@@ -136,7 +153,7 @@ export default {
         const now = new Date().toISOString();
         await env.DB
           .prepare(
-            'INSERT INTO visits (country, city, lat, lon, count, updated_at) VALUES (?1, ?2, ?3, ?4, 1, ?5) ' +
+            `INSERT INTO ${TABLE} (country, city, lat, lon, count, updated_at) VALUES (?1, ?2, ?3, ?4, 1, ?5) ` +
               'ON CONFLICT(country, city) DO UPDATE SET count = count + 1, ' +
               'lat = COALESCE(excluded.lat, lat), lon = COALESCE(excluded.lon, lon), updated_at = ?5'
           )
