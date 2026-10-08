@@ -213,8 +213,7 @@
         requestAnimationFrame(draw);
       }
       const countries = list.filter(item => item.country !== 'XX' && Number(item.count) > 0).length;
-      const cityCount = cities.filter(c => c.city && c.city !== 'Unknown').length;
-      summary.textContent = data.visits.toLocaleString() + ' visits · ' + countries + ' countries' + (cityCount ? ' · ' + cityCount + ' cities' : '');
+      summary.textContent = data.visits.toLocaleString() + ' visits · ' + countries + ' countries';
       note.textContent = cities.length
         ? 'Approximate city-level data. No IP addresses are stored.'
         : 'Approximate country-level data. No IP addresses are stored.';
