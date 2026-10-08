@@ -1,0 +1,64 @@
+{
+  "anyworld": {
+    "kind": "video",
+    "src": "assets/anyworld.mp4",
+    "poster": "assets/anyworld-poster.jpg",
+    "page": "https://xpeng-robotics.github.io/anyworld/",
+    "label": "Re-embodied rollout",
+    "alt": "AnyWorld: generated IRON-native interaction"
+  },
+  "xpace": {
+    "kind": "discover",
+    "src": "",
+    "poster": "",
+    "page": "https://xpeng-robotics.github.io/xpace/",
+    "label": "Robot demonstrations",
+    "alt": "XPACE official robot demonstration"
+  },
+  "swiftvla": {
+    "kind": "video",
+    "src": "https://swiftvla.github.io/img/tra1.mp4",
+    "poster": "",
+    "page": "https://swiftvla.github.io/",
+    "label": "Robot demonstration",
+    "alt": "SwiftVLA robot trajectory demonstration"
+  },
+  "diva": {
+    "kind": "video",
+    "src": "assets/diva.mp4",
+    "poster": "assets/diva-poster.jpg",
+    "page": "https://steller-cheng.github.io/DiVA/",
+    "label": "Interactive character",
+    "alt": "DiVA digital kitten responding to interaction",
+    "portrait": true
+  },
+  "cadcrafter": {
+    "kind": "figure",
+    "src": "assets/cadcrafter-poster.png",
+    "page": "https://arxiv.org/abs/2504.04753",
+    "label": "Paper figure",
+    "alt": "CADCrafter: images, parametric CAD commands, and reconstructed geometry"
+  },
+  "flow-priors": {
+    "kind": "gif",
+    "src": "https://xfyang.net/assets/img/publication_preview/iclr25.gif",
+    "page": "https://openreview.net/forum?id=SzPZK856iI",
+    "label": "Animated results",
+    "alt": "Animated results from the Rectified Flow Prior project"
+  },
+  "sculpt3d": {
+    "kind": "discover",
+    "src": "",
+    "poster": "assets/sculpt3d-poster.png",
+    "page": "https://stellarcheng.github.io/Sculpt3D/",
+    "label": "3D generation demos",
+    "alt": "Sculpt3D generated object turntable"
+  },
+  "lods": {
+    "kind": "gif",
+    "src": "https://xfyang.net/demo_diffusion_prior/static/image/demo_gif1.gif",
+    "page": "https://xfyang.net/demo_diffusion_prior/",
+    "label": "Animated 3D results",
+    "alt": "LODS generated lighthouse turntable"
+  }
+}

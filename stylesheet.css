@@ -1,0 +1,130 @@
+/* Minimal academic homepage, adapted from Jon Barron's public personal-site template. */
+@font-face {
+  font-family: 'Lato'; font-style: normal; font-weight: 400;
+  src: local('Lato Regular'), local('Lato-Regular'), url(https://fonts.gstatic.com/s/lato/v15/S6uyw4BMUTPHjx4wXiWtFCc.woff2) format('woff2');
+}
+@font-face {
+  font-family: 'Lato'; font-style: normal; font-weight: 700;
+  src: local('Lato Bold'), local('Lato-Bold'), url(https://fonts.gstatic.com/s/lato/v15/S6u9w4BMUTPHh6UVSwiPGQ3q5d0.woff2) format('woff2');
+}
+@font-face {
+  font-family: 'Lato'; font-style: italic; font-weight: 400;
+  src: local('Lato Italic'), local('Lato-Italic'), url(https://fonts.gstatic.com/s/lato/v15/S6u8w4BMUTPHjxsAXC-qNiXg7Q.woff2) format('woff2');
+}
+html { background: #fff; }
+body { margin: 0; }
+a { color: #1772d0; text-decoration: none; }
+a:focus, a:hover { color: #f09228; text-decoration: none; }
+body, td, th, tr, p, a, div, span { font-family: 'Lato', Verdana, Helvetica, sans-serif; font-size: 14px; }
+strong { font-family: 'Lato', Verdana, Helvetica, sans-serif; font-size: 14px; }
+h2 { margin: 0 0 10px; font-weight: normal; font-family: 'Lato', Verdana, Helvetica, sans-serif; font-size: 22px; }
+p { line-height: 1.45; }
+.main-table { width:100%; max-width:800px; border:0; border-spacing:0; border-collapse:separate; margin:0 auto; }
+.section-table { width:100%; border:0; border-spacing:0; border-collapse:separate; margin:0 auto; }
+.section-pad { padding:16px; width:100%; vertical-align:middle; }
+.pub-table { width:100%; border:0; border-spacing:0 9px; border-collapse:separate; margin:0 auto; }
+.papertitle { font-size: 14px; font-weight: 700; }
+.name { padding-top:20px; margin:0; text-align:center; font-size:32px; line-height:1.15; }
+.profile-links { text-align:center; }
+.profile-photo { vertical-align:middle; }
+.avatar-crop { width:100%; aspect-ratio:1/1; border-radius:50%; overflow:hidden; background:#eee; }
+.avatar-img { width:100%; height:100%; border-radius:50%; object-fit:cover; object-position:50% 38%; display:block; transform:scale(1.16); }
+.one { width:160px; height:120px; position:relative; overflow:hidden; }
+.one img { width:160px; height:120px; object-fit:cover; display:block; }
+.one.contain img { object-fit:contain; background:white; }
+.paper-img { padding:16px; width:25%; vertical-align:middle; }
+.paper-text { padding:8px; width:75%; vertical-align:middle; }
+.paper-text p { margin:6px 0 0; color:#333; }
+span.highlight { background-color:#ffffd0; }
+.news-list { line-height:1.7; }
+.news-date { display:inline-block; width:42px; color:#666; font-variant-numeric:tabular-nums; }
+.compact-list { margin-bottom:4px; }
+
+.opportunity-inline { margin:10px 0 4px; }
+.scholar-line { padding-top:5px; padding-bottom:12px; }
+.scholar-line p { margin:0; }
+.visitor { text-align:center; padding:18px 16px 28px; }
+.visitor h2 { margin-bottom:12px; }
+.visitor-globe { width:220px; min-height:210px; margin:0 auto; overflow:hidden; display:flex; align-items:center; justify-content:center; }
+.visitor-note { color:#999; font-size:11px; margin:5px 0 0; }
+
+.footer { text-align:center; color:#999; font-size:11px; padding:6px 0 30px; }
+
+@media (max-width: 600px) {
+  .main-table { width:100%; }
+  .profile-row, .paper-row { display:block; }
+  .profile-text, .profile-photo, .paper-img, .paper-text { display:block; width:100% !important; max-width:100% !important; box-sizing:border-box; }
+  .profile-photo { width:220px !important; margin:0 auto; }
+  .one { width:100%; height:auto; }
+  .one img { width:100%; height:auto; max-height:220px; object-fit:contain; }
+}
+
+/* v8: preserve the template, repair media and a non-silent visitor state. */
+#research p { margin:0; line-height:1.55; }
+.opportunity-inline { line-height:1.5; }
+.one { height:auto; min-height:120px; display:flex; align-items:center; justify-content:center; }
+.one img { height:auto; max-height:160px; width:160px; object-fit:contain; }
+.swift-media { position:relative; display:block; min-height:142px; }
+.swift-video { display:block; width:160px; height:120px; object-fit:cover; background:#f6f6f6; }
+.media-caption { display:block; margin-top:6px; text-align:center; font-size:11px; }
+.visitor-widget { margin:0 auto; max-width:320px; }
+.visitor-widget.connected { min-height:240px; }
+.visitor-status { font-size:13px; color:#666; margin:0 0 8px; }
+.visitor-note { max-width:430px; margin:6px auto 0; font-size:12px; line-height:1.5; }
+#visitor-provider { text-align:center; margin:0 auto; }
+@media(max-width:600px) {
+  .one img { width:100%; max-height:220px; }
+  .swift-video { width:100%; height:200px; }
+  .swift-media { max-width:320px; margin:auto; }
+}
+
+/* v13: natural biography, genuine project media, and a relaxed full-body cat avatar. */
+.avatar-crop { position:relative; max-width:240px; margin:auto; background:#715436; isolation:isolate; }
+.avatar-crop::before { content:""; position:absolute; inset:-12px; background:url("assets/cat.jpg") center/cover; filter:blur(12px); z-index:-1; }
+.avatar-img { object-fit:contain; object-position:center; transform:none; border-radius:0; position:relative; }
+.research-media { width:184px; margin:auto; }
+.media-frame { position:relative; width:184px; height:138px; background:#fff; overflow:hidden; display:flex; align-items:center; justify-content:center; }
+.paper-video { position:absolute; inset:0; display:block; width:100%; height:100%; object-fit:contain; opacity:0; }
+.media-frame.ready .paper-video { opacity:1; }
+.media-poster,.paper-figure,.animated-result { display:block; width:100%; height:100%; object-fit:contain; background:#fff; }
+.media-frame.ready .media-poster { visibility:hidden; }
+.portrait-media { height:204px; }
+.media-frame.portrait-media .paper-video,.media-frame.portrait-media .media-poster { object-fit:contain; }
+.media-fallback { position:absolute; left:0; right:0; top:50%; transform:translateY(-50%); text-align:center; font-size:12px; background:rgba(255,255,255,.92); padding:6px 0; }
+.media-frame.ready .media-fallback { display:none; }
+.media-frame:has(.media-poster):not(.unavailable) .media-fallback { display:none; }
+.media-toggle { position:absolute; bottom:5px; right:5px; border:0; padding:3px 6px; border-radius:2px; background:rgba(255,255,255,.9); color:#333; font:11px sans-serif; cursor:pointer; opacity:0; z-index:2; }
+.media-frame.ready:hover .media-toggle,.media-toggle:focus-visible,.media-frame.ready.paused .media-toggle { opacity:1; }
+.media-frame.unavailable:not(.ready) .paper-video { display:none; }
+.media-caption { display:block; margin:5px 0 0; font-size:11px; text-align:center; line-height:1.3; }
+.paper-img { width:28%; }
+.paper-text { width:72%; line-height:1.4; }
+#research p { margin:0; line-height:1.55; }
+@media(max-width:600px) {
+  .research-media { width:min(100%,260px); }
+  .media-frame { width:100%; height:184px; }
+  .portrait-media { height:220px; }
+  .paper-text { padding:6px 16px 16px; }
+  .avatar-crop { max-width:200px; }
+}
+@media(prefers-reduced-motion:reduce) { .media-toggle { opacity:1; } }
+
+
+/* V14: photographic kitten + understated visitor globe */
+.avatar-crop{width:100%;max-width:220px;aspect-ratio:1/1;border-radius:50%;overflow:hidden;isolation:isolate;background:#f3ece3;}
+.avatar-crop::before{content:none!important;display:none!important;}
+.avatar-img{width:100%;height:100%;border-radius:50%;object-fit:cover;object-position:center center;transform:scale(1.02)!important;position:relative;}
+.visitor{text-align:center;padding:18px 16px 28px;}
+.visitor-widget{width:260px;height:260px;max-width:100%;margin:0 auto;display:flex;align-items:center;justify-content:center;}
+.visitor-earth{display:block;width:240px;height:240px;border-radius:50%;box-shadow:inset 0 0 20px rgba(64,136,170,.25);filter:drop-shadow(0 2px 5px rgba(41,77,93,.19));}
+.visitor-summary{font-size:13px;color:#3a525f;margin:1px auto 3px;max-width:420px;}
+.visitor-note{font-size:11px;color:#777;max-width:440px;margin:3px auto;line-height:1.5;}
+@media(max-width:600px){.visitor-widget{width:240px;height:240px}.avatar-crop{max-width:200px}}
+
+/* Explicit official-demo link while remote media is unavailable. */
+.media-frame:not(:has(.media-poster)):has(.media-fallback){background:#f1f5f5;border:1px solid #e3e9ea;}
+.media-frame:not(:has(.media-poster)) .media-fallback{position:absolute;inset:0;top:0;transform:none;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:8px;background:transparent!important;text-align:center;font-size:11px;color:#3b6380;padding:10px;}
+.media-frame:not(:has(.media-poster)).ready .media-fallback{display:none;}
+.preview-play{width:34px;height:34px;border-radius:50%;background:#dce7ea;display:flex;justify-content:center;align-items:center;color:#315d76;font-size:13px;padding-left:2px}
+.media-frame.ready:not(.playing) .media-poster{visibility:visible!important;}
+.media-frame.ready:not(.playing) .paper-video{opacity:0!important;}
