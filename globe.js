@@ -13,8 +13,8 @@
   if (!ctx) { summary.textContent = 'Globe preview unavailable in this browser.'; return; }
 
   /* ---------- look & feel ---------- */
-  const OCEAN = [222, 233, 242];      // light blue-grey water
-  const LAND  = [150, 172, 192];      // slate land
+  const OCEAN = [232, 242, 250];      // bright, airy water
+  const LAND  = [164, 190, 214];      // light slate-blue land
   const MARK  = '#f0694c';            // coral visitor dots
   const MARK_HALO = 'rgba(240,105,76,.22)';
   const TILT  = 22 * Math.PI / 180;   // axial tilt toward the viewer
@@ -24,7 +24,7 @@
 
   /* ---------- geometry ---------- */
   const cssSize = Math.max(200, Math.round(holder.clientWidth || 320));
-  const dpr = Math.min(window.devicePixelRatio || 1, cssSize <= 280 ? 1.5 : 2);
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
   const N = Math.round(cssSize * dpr);
   canvas.width = canvas.height = N;
   canvas.style.width = canvas.style.height = cssSize + 'px';
@@ -53,7 +53,7 @@
     lonArr[idx] = Math.atan2(nx, zs);
     vArr[idx] = (Math.PI / 2 - Math.asin(Math.max(-1, Math.min(1, ys)))) / Math.PI;
     const diffuse = Math.max(0, nx * LIGHT[0] + ny * LIGHT[1] + z * LIGHT[2]);
-    light[idx] = (0.80 + 0.20 * diffuse) * (0.90 + 0.10 * z);
+    light[idx] = (0.86 + 0.14 * diffuse) * (0.93 + 0.07 * z);
     cover[idx] = Math.round(coverage * 255);
     inside.push(idx);
   }
@@ -115,7 +115,7 @@
     ctx.globalCompositeOperation = 'source-atop';
     let g = ctx.createRadialGradient(C, C, R * 0.55, C, C, R);
     g.addColorStop(0, 'rgba(70,100,130,0)');
-    g.addColorStop(1, 'rgba(70,100,130,.26)');
+    g.addColorStop(1, 'rgba(70,100,130,.17)');
     ctx.fillStyle = g; ctx.fillRect(0, 0, N, N);
     g = ctx.createRadialGradient(C - R * 0.38, C - R * 0.42, 0, C - R * 0.38, C - R * 0.42, R * 0.9);
     g.addColorStop(0, 'rgba(255,255,255,.30)');
@@ -125,7 +125,7 @@
     ctx.restore();
 
     ctx.beginPath(); ctx.arc(C, C, R, 0, TWO_PI);
-    ctx.strokeStyle = 'rgba(60,90,120,.28)'; ctx.lineWidth = 1 * dpr; ctx.stroke();
+    ctx.strokeStyle = 'rgba(60,90,120,.22)'; ctx.lineWidth = 1 * dpr; ctx.stroke();
 
     // Visitor markers (sphere frame -> tilted view frame).
     for (const m of marked) {
@@ -136,7 +136,7 @@
       if (zv < 0.04) continue;
       const X = C + R * xs, Y = C - R * yv;
       const fade = Math.min(1, zv * 4);
-      const rad = dpr * Math.min(5.5, 2.4 + Math.log1p(m.count) * 0.9);
+      const rad = dpr * Math.min(4.5, 2.0 + Math.log1p(m.count) * 0.8);
       ctx.globalAlpha = fade;
       ctx.beginPath(); ctx.arc(X, Y, rad * 2.4, 0, TWO_PI); ctx.fillStyle = MARK_HALO; ctx.fill();
       ctx.beginPath(); ctx.arc(X, Y, rad, 0, TWO_PI); ctx.fillStyle = MARK; ctx.fill();
