@@ -8,7 +8,6 @@
   if (!holder) return;
   const canvas = holder.querySelector('canvas');
   const summary = document.getElementById('visitor-summary');
-  const note = document.getElementById('visitor-help');
   const ctx = canvas.getContext('2d', {alpha:true});
   if (!ctx) { summary.textContent = 'Globe preview unavailable in this browser.'; return; }
 
@@ -175,7 +174,6 @@
   const externalEndpoint = /^https?:\/\//i.test(endpoint);
   if (location.hostname.toLowerCase().endsWith('.github.io') && !externalEndpoint) {
     summary.textContent = 'Globe preview · live visitor tracking not connected yet';
-    note.textContent = 'The globe is interactive. Real visitor countries and totals require an analytics service.';
     return;
   }
 
@@ -214,9 +212,6 @@
       }
       const countries = list.filter(item => item.country !== 'XX' && Number(item.count) > 0).length;
       summary.textContent = data.visits.toLocaleString() + ' visits · ' + countries + ' countries';
-      note.textContent = cities.length
-        ? 'Approximate city-level data. No IP addresses are stored.'
-        : 'Approximate country-level data. No IP addresses are stored.';
       return true;
     } catch (e) {
       summary.textContent = 'Globe is ready · live counts activate when the site is deployed with its analytics backend';
