@@ -2,14 +2,15 @@
  * Visitor-globe backend for https://steller-chen.github.io/
  * Runs as a Cloudflare Worker with a D1 database bound as `DB`.
  *
- * Privacy: only country-level aggregates are stored (ISO 3166-1 alpha-2 code
- * taken from Cloudflare's request.cf.country). No IP addresses, user agents,
- * timestamps per visit, or cookies. The browser de-duplicates its own visits
+ * Privacy: only aggregates are stored — a visit count per (country, city) with
+ * the city's approximate coordinates (rounded to 0.1°, ~10 km), all taken from
+ * Cloudflare's own request.cf geolocation. No IP addresses, user agents,
+ * per-visit timestamps or cookies. The browser de-duplicates its own visits
  * to one per day via localStorage (see globe.js).
  *
  * API (any path works; the site uses /api/visitors):
- *   GET  -> {enabled:true, visits:<total>, countries:[{country:"SG", count:12}, ...]}
- *   POST -> records one visit for the caller's country (only from allowed origins)
+ *   GET  -> {enabled:true, visits, countries:[{country,count}], cities:[{country,city,lat,lon,count}]}
+ *   POST -> records one visit for the caller's location (only from allowed origins)
  *
  * Setup (Cloudflare dashboard, free plan):
  *   1. Workers & Pages -> Create -> Worker -> paste this file -> Deploy
@@ -22,6 +23,7 @@
  */
 
 const DEFAULT_ORIGINS = ['https://steller-chen.github.io'];
+const MAX_CITIES = 400; // cap the GET payload; cities are returned by count, descending
 
 function allowedOrigins(env) {
   const raw = (env.ALLOWED_ORIGINS || '').trim();
@@ -30,7 +32,7 @@ function allowedOrigins(env) {
 }
 
 function corsHeaders(origin, allowed) {
-  const h = {
+  return {
     'Content-Type': 'application/json; charset=UTF-8',
     'Cache-Control': 'no-store',
     'X-Content-Type-Options': 'nosniff',
@@ -38,10 +40,9 @@ function corsHeaders(origin, allowed) {
     'Access-Control-Allow-Headers': 'Content-Type',
     'Access-Control-Max-Age': '86400',
     'Vary': 'Origin',
+    // Stats are public; writes are restricted to the homepage origin.
+    'Access-Control-Allow-Origin': allowed.includes(origin) ? origin : '*',
   };
-  // Stats are public; writes are restricted to the homepage origin.
-  h['Access-Control-Allow-Origin'] = allowed.includes(origin) ? origin : '*';
-  return h;
 }
 
 function json(obj, status, headers) {
@@ -52,20 +53,53 @@ async function ensureTable(db) {
   await db
     .prepare(
       'CREATE TABLE IF NOT EXISTS visits (' +
-        'country TEXT PRIMARY KEY, ' +
+        'country TEXT NOT NULL, ' +
+        'city TEXT NOT NULL, ' +
+        'lat REAL, ' +
+        'lon REAL, ' +
         'count INTEGER NOT NULL DEFAULT 0, ' +
-        'updated_at TEXT)'
+        'updated_at TEXT, ' +
+        'PRIMARY KEY (country, city))'
     )
     .run();
 }
 
 async function readStats(db) {
   const { results } = await db
-    .prepare('SELECT country, count FROM visits WHERE count > 0 ORDER BY count DESC')
+    .prepare('SELECT country, city, lat, lon, count FROM visits WHERE count > 0 ORDER BY count DESC')
     .all();
-  const countries = (results || []).map((r) => ({ country: r.country, count: Number(r.count) || 0 }));
-  const visits = countries.reduce((sum, c) => sum + c.count, 0);
-  return { enabled: true, visits, countries };
+  const rows = results || [];
+  const byCountry = new Map();
+  const cities = [];
+  let visits = 0;
+  for (const r of rows) {
+    const count = Number(r.count) || 0;
+    visits += count;
+    byCountry.set(r.country, (byCountry.get(r.country) || 0) + count);
+    if (cities.length < MAX_CITIES && r.lat !== null && r.lon !== null) {
+      cities.push({ country: r.country, city: r.city, lat: Number(r.lat), lon: Number(r.lon), count });
+    }
+  }
+  const countries = [...byCountry]
+    .map(([country, count]) => ({ country, count }))
+    .sort((a, b) => b.count - a.count);
+  return { enabled: true, visits, countries, cities };
+}
+
+function locationOf(request) {
+  const cf = request.cf || {};
+  const country = /^[A-Z]{2}$/.test(cf.country || '') ? cf.country : 'XX';
+  let city = String(cf.city || cf.region || '').trim().slice(0, 80);
+  if (!city) city = 'Unknown';
+  const lat = Number.parseFloat(cf.latitude);
+  const lon = Number.parseFloat(cf.longitude);
+  const hasCoords = Number.isFinite(lat) && Number.isFinite(lon);
+  return {
+    country,
+    city,
+    lat: hasCoords ? Math.round(lat * 10) / 10 : null,
+    lon: hasCoords ? Math.round(lon * 10) / 10 : null,
+  };
 }
 
 export default {
@@ -98,15 +132,15 @@ export default {
         if (!allowed.includes(origin)) {
           return json({ error: 'origin not allowed' }, 403, headers);
         }
-        const cfCountry = (request.cf && request.cf.country) || '';
-        const country = /^[A-Z]{2}$/.test(cfCountry) ? cfCountry : 'XX';
+        const loc = locationOf(request);
         const now = new Date().toISOString();
         await env.DB
           .prepare(
-            'INSERT INTO visits (country, count, updated_at) VALUES (?1, 1, ?2) ' +
-              'ON CONFLICT(country) DO UPDATE SET count = count + 1, updated_at = ?2'
+            'INSERT INTO visits (country, city, lat, lon, count, updated_at) VALUES (?1, ?2, ?3, ?4, 1, ?5) ' +
+              'ON CONFLICT(country, city) DO UPDATE SET count = count + 1, ' +
+              'lat = COALESCE(excluded.lat, lat), lon = COALESCE(excluded.lon, lon), updated_at = ?5'
           )
-          .bind(country, now)
+          .bind(loc.country, loc.city, loc.lat, loc.lon, now)
           .run();
         const stats = await readStats(env.DB);
         return json({ enabled: true, visits: stats.visits }, 200, headers);

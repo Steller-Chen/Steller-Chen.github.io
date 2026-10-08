@@ -106,14 +106,29 @@
       const data=await response.json();
       if (!data.enabled || typeof data.visits!=='number') throw Error('not configured');
       const list=Array.isArray(data.countries) ? data.countries : [];
+      const cities=Array.isArray(data.cities) ? data.cities.filter(c => Number.isFinite(Number(c.lat)) && Number.isFinite(Number(c.lon)) && Number(c.count)>0) : [];
       marked.length=0;
-      for(const entry of list){
-        const center = countryCentres[entry.country];
-        if(center && Number(entry.count)>0) marked.push({lon:center[0],lat:center[1],count:entry.count});
+      if (cities.length) {
+        // City-level dots (approximate coordinates from the backend, ~10 km granularity).
+        const covered=new Set();
+        for(const c of cities){ marked.push({lon:Number(c.lon),lat:Number(c.lat),count:Number(c.count)}); covered.add(c.country); }
+        // Countries whose visits carried no coordinates still get a dot at the country centre.
+        for(const entry of list){
+          const center = countryCentres[entry.country];
+          if(center && !covered.has(entry.country) && Number(entry.count)>0) marked.push({lon:center[0],lat:center[1],count:entry.count});
+        }
+      } else {
+        for(const entry of list){
+          const center = countryCentres[entry.country];
+          if(center && Number(entry.count)>0) marked.push({lon:center[0],lat:center[1],count:entry.count});
+        }
       }
       const countries=list.filter(item => item.country!=='XX' && Number(item.count)>0).length;
-      summary.textContent=data.visits.toLocaleString()+' visits · '+countries+' countries';
-      note.textContent='Approximate country-level data. No IP addresses are stored.';
+      const cityCount=cities.filter(c => c.city && c.city!=='Unknown').length;
+      summary.textContent=data.visits.toLocaleString()+' visits · '+countries+' countries'+(cityCount ? ' · '+cityCount+' cities' : '');
+      note.textContent=cities.length
+        ? 'Approximate city-level data. No IP addresses are stored.'
+        : 'Approximate country-level data. No IP addresses are stored.';
       return true;
     } catch (e) {
       summary.textContent='Globe is ready · live counts activate when the site is deployed with its analytics backend';
