@@ -15,3 +15,11 @@ Every push to `main` goes live within a minute or two.
 - `assets/` — cat portrait, paper posters/videos, globe texture, favicon
 - `Cheng_Chen_CV_Physical_Intelligence.pdf` — CV; the "CV" link opens it in a new browser tab
 - `media-sources.json` — media manifest used by `media.js`
+
+## Live visitor globe (optional backend)
+
+The globe renders on its own; real visitor counts and country dots need a tiny backend because
+GitHub Pages is static. `cloudflare/visitor-worker.js` is a Cloudflare Worker (free plan) backed by
+a D1 database that stores **only country-level totals** — no IP addresses. Deploy it (instructions
+at the top of the file), then set `data-endpoint` on `#visitor-widget` in `index.html` to the
+Worker URL, e.g. `https://visitor-globe.<your-subdomain>.workers.dev/api/visitors`.

@@ -89,15 +89,16 @@
     summary.textContent='Globe preview · no visits are recorded from a local file';
     return;
   }
-  // GitHub Pages is a static host. There is no /api/visitors backend by default.
-  // Display the real rotating globe with an explicit preview label, not made-up visitor dots/counts.
-  // The Cloudflare Pages backend can be deployed separately later and this check adjusted then.
-  if (location.hostname.toLowerCase().endsWith('.github.io')) {
+  // GitHub Pages is a static host: a relative /api/visitors endpoint cannot exist there.
+  // Live data needs an absolute endpoint (the Cloudflare Worker in cloudflare/visitor-worker.js)
+  // set via data-endpoint. Without one, show the real rotating globe with an explicit preview label.
+  const endpoint=holder.getAttribute('data-endpoint') || '/api/visitors';
+  const externalEndpoint=/^https?:\/\//i.test(endpoint);
+  if (location.hostname.toLowerCase().endsWith('.github.io') && !externalEndpoint) {
     summary.textContent='Globe preview · live visitor tracking not connected yet';
     note.textContent='The globe is interactive. Real visitor countries and totals require an analytics service.';
     return;
   }
-  const endpoint=holder.getAttribute('data-endpoint') || '/api/visitors';
   async function getStats() {
     try {
       const response=await fetch(endpoint,{cache:'no-store',credentials:'omit'});
