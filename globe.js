@@ -200,7 +200,8 @@
   }
   function showTip(m) {
     active = m; paused = true;
-    const where = m.city && m.city !== 'Unknown' ? m.city + ', ' + countryName(m.country) : countryName(m.country);
+    const nation = countryName(m.country);
+    const where = m.city && m.city !== 'Unknown' && m.city.toLowerCase() !== nation.toLowerCase() ? m.city + ', ' + nation : nation;
     tip.textContent = '';
     const strong = document.createElement('strong'); strong.textContent = where;
     const count = document.createElement('span'); count.textContent = m.count.toLocaleString() + (m.count === 1 ? ' visit' : ' visits');
