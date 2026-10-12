@@ -128,3 +128,9 @@ span.highlight { background-color:#ffffd0; }
 .preview-play{width:34px;height:34px;border-radius:50%;background:#dce7ea;display:flex;justify-content:center;align-items:center;color:#315d76;font-size:13px;padding-left:2px}
 .media-frame.ready:not(.playing) .media-poster{visibility:visible!important;}
 .media-frame.ready:not(.playing) .paper-video{opacity:0!important;}
+
+/* Visitor globe tooltip */
+.globe-tip{position:absolute;left:0;top:0;transform:translate(-50%,-100%);pointer-events:none;z-index:2;background:#fff;color:#2b3f50;border:1px solid #dfe7ee;border-radius:7px;box-shadow:0 4px 14px rgba(30,60,90,.14);padding:5px 9px;font-size:12px;line-height:1.35;white-space:nowrap;text-align:left;opacity:0;transition:opacity .12s ease;}
+.globe-tip.show{opacity:1;}
+.globe-tip strong{display:block;font-weight:600;}
+.globe-tip span{color:#6b7f8f;font-size:11px;}

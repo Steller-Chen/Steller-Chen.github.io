@@ -85,10 +85,19 @@
   let offset = 1.75;                 // start facing Asia-Pacific
   let lastPaint = 0;
   let visible = true;
+  let paused = false;                // rotation pauses while a dot is hovered or selected
+  let active = null;                 // marker currently shown in the tooltip
+  let pinned = false;                // tooltip opened by click/tap stays until dismissed
   const marked = [];
   const countryCentres = window.COUNTRY_CENTRES || {};
+  let regionNames = null;
+  try { regionNames = new Intl.DisplayNames(['en'], {type:'region'}); } catch (_) {}
+  const countryName = (code) => {
+    if (!code || code === 'XX') return 'Unknown region';
+    try { return (regionNames && regionNames.of(code)) || code; } catch (_) { return code; }
+  };
 
-  function paint() {
+  let paint = function () {
     const scale = TW / TWO_PI;
     const rowMax = TH - 1;
     for (const i of inside) {
@@ -132,22 +141,24 @@
       const diff = lon - offset, coslat = Math.cos(lat);
       const xs = coslat * Math.sin(diff), ys = Math.sin(lat), zs = coslat * Math.cos(diff);
       const yv = ys * cosT - zs * sinT, zv = ys * sinT + zs * cosT;
-      if (zv < 0.04) continue;
+      m._vis = zv >= 0.04;
+      if (!m._vis) continue;
       const X = C + R * xs, Y = C - R * yv;
       const fade = Math.min(1, zv * 4);
-      const rad = dpr * Math.min(4.5, 2.0 + Math.log1p(m.count) * 0.8);
+      const rad = dpr * Math.min(4.5, 2.0 + Math.log1p(m.count) * 0.8) * (m === active ? 1.35 : 1);
+      m._x = X / dpr; m._y = Y / dpr; m._r = rad / dpr;
       ctx.globalAlpha = fade;
       ctx.beginPath(); ctx.arc(X, Y, rad * 2.4, 0, TWO_PI); ctx.fillStyle = MARK_HALO; ctx.fill();
       ctx.beginPath(); ctx.arc(X, Y, rad, 0, TWO_PI); ctx.fillStyle = MARK; ctx.fill();
       ctx.beginPath(); ctx.arc(X, Y, rad + 0.9 * dpr, 0, TWO_PI); ctx.strokeStyle = 'rgba(255,255,255,.85)'; ctx.lineWidth = 1 * dpr; ctx.stroke();
       ctx.globalAlpha = 1;
     }
-  }
+  };
 
   function draw(t) {
     if (!land) return;
     if (!lastPaint || t - lastPaint >= FRAME_MS) {
-      if (lastPaint && speed) offset += Math.min(250, t - lastPaint) / 1000 * speed;
+      if (lastPaint && speed && !paused) offset += Math.min(250, t - lastPaint) / 1000 * speed;
       lastPaint = t;
       paint();
     }
@@ -162,6 +173,63 @@
       if (visible && !wasVisible) { lastPaint = 0; requestAnimationFrame(draw); }
     }, {threshold: 0.05}).observe(holder);
   }
+
+  /* ---------- tooltip: hover or tap a dot to see where visitors came from ---------- */
+  const tip = document.createElement('div');
+  tip.className = 'globe-tip';
+  tip.setAttribute('role', 'status');
+  holder.style.position = 'relative';
+  holder.appendChild(tip);
+
+  function hitTest(clientX, clientY) {
+    const rect = canvas.getBoundingClientRect();
+    const x = clientX - rect.left, y = clientY - rect.top;
+    let best = null, bestD = Infinity;
+    for (const m of marked) {
+      if (!m._vis) continue;
+      const d = Math.hypot(m._x - x, m._y - y);
+      const reach = Math.max(11, m._r * 2.6);
+      if (d <= reach && d < bestD) { best = m; bestD = d; }
+    }
+    return best;
+  }
+  function placeTip() {
+    if (!active || !active._vis) { hideTip(); return; }
+    tip.style.left = (canvas.offsetLeft + active._x) + 'px';
+    tip.style.top = (canvas.offsetTop + active._y - active._r - 6) + 'px';
+  }
+  function showTip(m) {
+    active = m; paused = true;
+    const where = m.city && m.city !== 'Unknown' ? m.city + ', ' + countryName(m.country) : countryName(m.country);
+    tip.textContent = '';
+    const strong = document.createElement('strong'); strong.textContent = where;
+    const count = document.createElement('span'); count.textContent = m.count.toLocaleString() + (m.count === 1 ? ' visit' : ' visits');
+    tip.append(strong, count);
+    placeTip();
+    tip.classList.add('show');
+    lastPaint = 0; requestAnimationFrame(draw);
+  }
+  function hideTip() {
+    tip.classList.remove('show');
+    if (active) { active = null; lastPaint = 0; requestAnimationFrame(draw); }
+    paused = false; pinned = false;
+  }
+  canvas.addEventListener('pointermove', (e) => {
+    if (e.pointerType !== 'mouse') return;
+    const m = hitTest(e.clientX, e.clientY);
+    canvas.style.cursor = m ? 'pointer' : '';
+    if (m && m !== active) showTip(m);
+    else if (!m && active && !pinned) hideTip();
+  });
+  canvas.addEventListener('pointerleave', () => { canvas.style.cursor = ''; if (!pinned) hideTip(); });
+  canvas.addEventListener('click', (e) => {
+    const m = hitTest(e.clientX, e.clientY);
+    if (m) { showTip(m); pinned = true; } else hideTip();
+  });
+  document.addEventListener('pointerdown', (e) => { if (pinned && !holder.contains(e.target)) hideTip(); });
+  // Keep the tooltip attached to its dot as frames repaint.
+  const repaint = paint;
+  paint = function () { repaint(); if (active) placeTip(); };
 
   /* ---------- live data ---------- */
   if (location.protocol === 'file:') {
@@ -191,18 +259,19 @@
       if (cities.length) {
         // City-level dots (approximate coordinates from the backend, ~10 km granularity).
         const covered = new Set();
-        for (const c of cities) { marked.push({lon:Number(c.lon), lat:Number(c.lat), count:Number(c.count)}); covered.add(c.country); }
+        for (const c of cities) { marked.push({lon:Number(c.lon), lat:Number(c.lat), count:Number(c.count), city:String(c.city || ''), country:c.country}); covered.add(c.country); }
         // Countries whose visits carried no coordinates still get a dot at the country centre.
         for (const entry of list) {
           const centre = countryCentres[entry.country];
-          if (centre && !covered.has(entry.country) && Number(entry.count) > 0) marked.push({lon:centre[0], lat:centre[1], count:entry.count});
+          if (centre && !covered.has(entry.country) && Number(entry.count) > 0) marked.push({lon:centre[0], lat:centre[1], count:Number(entry.count), country:entry.country});
         }
       } else {
         for (const entry of list) {
           const centre = countryCentres[entry.country];
-          if (centre && Number(entry.count) > 0) marked.push({lon:centre[0], lat:centre[1], count:entry.count});
+          if (centre && Number(entry.count) > 0) marked.push({lon:centre[0], lat:centre[1], count:Number(entry.count), country:entry.country});
         }
       }
+      if (active) hideTip();
       if (speed === 0 && marked.length) {
         // Static globe (reduced motion): face the busiest location and repaint once so the dots show.
         const top = marked.reduce((a, b) => (b.count > a.count ? b : a), marked[0]);
