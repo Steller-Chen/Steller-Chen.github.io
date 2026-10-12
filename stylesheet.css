@@ -134,3 +134,4 @@ span.highlight { background-color:#ffffd0; }
 .globe-tip.show{opacity:1;}
 .globe-tip strong{display:block;font-weight:600;}
 .globe-tip span{color:#6b7f8f;font-size:11px;}
+.visitor-earth{cursor:grab;user-select:none;-webkit-user-select:none;}

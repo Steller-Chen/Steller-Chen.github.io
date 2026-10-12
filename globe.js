@@ -74,7 +74,7 @@
       land[i] = Math.max(0, Math.min(1, (data[i * 4 + 1] - 49) / 72));
     }
     lastPaint = 0;
-    requestAnimationFrame(draw);
+    kick();
   };
   texture.onerror = () => { summary.textContent = 'Unable to load globe texture.'; };
   texture.src = holder.getAttribute('data-texture') || 'assets/earth-surface.png';
@@ -86,6 +86,13 @@
   let lastPaint = 0;
   let visible = true;
   let paused = false;                // rotation pauses while a dot is hovered or selected
+  let dragging = false;              // user is dragging the globe
+  let spin = 0;                      // inertial angular velocity (rad/s) after a drag
+  let rafId = 0, forceRepaint = false;
+  function kick(force) {             // schedule exactly one animation frame
+    if (force) forceRepaint = true;
+    if (!rafId) rafId = requestAnimationFrame(draw);
+  }
   let active = null;                 // marker currently shown in the tooltip
   let pinned = false;                // tooltip opened by click/tap stays until dismissed
   const marked = [];
@@ -156,13 +163,18 @@
   };
 
   function draw(t) {
+    rafId = 0;
     if (!land) return;
-    if (!lastPaint || t - lastPaint >= FRAME_MS) {
-      if (lastPaint && speed && !paused) offset += Math.min(250, t - lastPaint) / 1000 * speed;
-      lastPaint = t;
+    if (forceRepaint || !lastPaint || t - lastPaint >= FRAME_MS) {
+      const dt = lastPaint ? Math.min(250, t - lastPaint) / 1000 : 0;
+      if (!dragging) {
+        if (Math.abs(spin) > 0.03) { offset += spin * dt; spin *= Math.exp(-dt * 2.6); }
+        else { spin = 0; if (speed && !paused) offset += dt * speed; }
+      }
+      lastPaint = t; forceRepaint = false;
       paint();
     }
-    if (speed && visible) requestAnimationFrame(draw);
+    if (visible && (speed || dragging || spin)) kick();
   }
 
   // Pause the animation while the globe is scrolled out of view.
@@ -170,7 +182,7 @@
     new IntersectionObserver((entries) => {
       const wasVisible = visible;
       visible = entries.some((e) => e.isIntersecting);
-      if (visible && !wasVisible) { lastPaint = 0; requestAnimationFrame(draw); }
+      if (visible && !wasVisible) { lastPaint = 0; kick(); }
     }, {threshold: 0.05}).observe(holder);
   }
 
@@ -208,26 +220,66 @@
     tip.append(strong, count);
     placeTip();
     tip.classList.add('show');
-    lastPaint = 0; requestAnimationFrame(draw);
+    kick(true);
   }
   function hideTip() {
     tip.classList.remove('show');
-    if (active) { active = null; lastPaint = 0; requestAnimationFrame(draw); }
+    if (active) { active = null; kick(true); }
     paused = false; pinned = false;
   }
   canvas.addEventListener('pointermove', (e) => {
-    if (e.pointerType !== 'mouse') return;
+    if (dragging || e.pointerType !== 'mouse') return;
     const m = hitTest(e.clientX, e.clientY);
     canvas.style.cursor = m ? 'pointer' : '';
     if (m && m !== active) showTip(m);
     else if (!m && active && !pinned) hideTip();
   });
-  canvas.addEventListener('pointerleave', () => { canvas.style.cursor = ''; if (!pinned) hideTip(); });
+  canvas.addEventListener('pointerleave', () => { if (dragging) return; canvas.style.cursor = ''; if (!pinned) hideTip(); });
   canvas.addEventListener('click', (e) => {
+    if (dragMoved) { dragMoved = false; return; }   // a drag, not a click
     const m = hitTest(e.clientX, e.clientY);
     if (m) { showTip(m); pinned = true; } else hideTip();
   });
   document.addEventListener('pointerdown', (e) => { if (pinned && !holder.contains(e.target)) hideTip(); });
+  /* ---------- drag to rotate (mouse, pen or touch) ---------- */
+  let dragId = null, dragX = 0, dragT = 0, dragMoved = false;
+  canvas.style.touchAction = 'pan-y';          // vertical swipes still scroll the page
+  canvas.addEventListener('pointerdown', (e) => {
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    dragId = e.pointerId; dragX = e.clientX; dragT = performance.now();
+    dragMoved = false; spin = 0;
+  });
+  canvas.addEventListener('pointermove', (e) => {
+    if (e.pointerId !== dragId) return;
+    const dx = e.clientX - dragX;
+    if (!dragging) {
+      if (Math.abs(dx) < 4) return;            // small jitter is still a click
+      dragging = true; dragMoved = true;
+      try { canvas.setPointerCapture(e.pointerId); } catch (_) {}
+      if (active) hideTip();
+      canvas.style.cursor = 'grabbing';
+    }
+    const now = performance.now();
+    const dTheta = -dx / (R / dpr);            // one globe radius of drag ≈ one radian
+    offset += dTheta;
+    const v = dTheta / Math.max(8, now - dragT) * 1000;
+    spin = spin * 0.6 + v * 0.4;               // smoothed release velocity
+    dragX = e.clientX; dragT = now;
+    kick(true);
+  });
+  function endDrag(e) {
+    if (e.pointerId !== dragId) return;
+    dragId = null;
+    if (!dragging) return;
+    dragging = false;
+    if (performance.now() - dragT > 90) spin = 0;   // held still before release: no fling
+    spin = Math.max(-6, Math.min(6, spin));
+    canvas.style.cursor = '';
+    kick(true);
+  }
+  canvas.addEventListener('pointerup', endDrag);
+  canvas.addEventListener('pointercancel', endDrag);
+
   // Keep the tooltip attached to its dot as frames repaint.
   const repaint = paint;
   paint = function () { repaint(); if (active) placeTip(); };
@@ -277,8 +329,7 @@
         // Static globe (reduced motion): face the busiest location and repaint once so the dots show.
         const top = marked.reduce((a, b) => (b.count > a.count ? b : a), marked[0]);
         offset = top.lon * Math.PI / 180;
-        lastPaint = 0;
-        requestAnimationFrame(draw);
+        kick(true);
       }
       const countries = list.filter(item => item.country !== 'XX' && Number(item.count) > 0).length;
       summary.textContent = data.visits.toLocaleString() + ' visits · ' + countries + ' countries';
