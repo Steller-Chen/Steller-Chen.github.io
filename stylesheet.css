@@ -135,3 +135,18 @@ span.highlight { background-color:#ffffd0; }
 .globe-tip strong{display:block;font-weight:600;}
 .globe-tip span{color:#6b7f8f;font-size:11px;}
 .visitor-earth{cursor:grab;user-select:none;-webkit-user-select:none;}
+
+/* V17: Chaoyue-Song-inspired refinements */
+.profile-text p { margin:10px 0; }
+.callout-pad { padding-top:4px; padding-bottom:4px; }
+.callout { margin:0 0 14px; }
+.affiliations { display:flex; align-items:center; justify-content:center; flex-wrap:wrap; gap:18px 42px; padding:6px 0 2px; }
+.affiliations a { display:inline-flex; align-items:center; opacity:.92; transition:opacity .15s; }
+.affiliations a:hover { opacity:1; }
+.aff-logo { height:48px; width:auto; display:block; }
+.aff-logo.aff-xpeng { height:18px; }
+ul.bullets { margin:0; padding-left:20px; line-height:1.75; }
+ul.bullets li { padding-left:2px; }
+.when { color:#555; font-variant-numeric:tabular-nums; margin-right:2px; }
+.pub-note { color:#666; font-size:13px; margin:10px 0 0; }
+@media (max-width:600px){ .affiliations{ gap:14px 26px; } .aff-logo{ height:38px; } .aff-logo.aff-xpeng{ height:15px; } }
