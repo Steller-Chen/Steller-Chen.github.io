@@ -144,4 +144,4 @@ ul.bullets { margin:0; padding-left:20px; line-height:1.75; }
 ul.bullets li { padding-left:2px; }
 .when { color:#555; font-variant-numeric:tabular-nums; margin-right:2px; }
 .pub-note { color:#666; font-size:13px; margin:10px 0 0; }
-@media (max-width:600px){ 
+@media (max-width:600px){ .hl { color:#e0362f; font-weight:700; }
