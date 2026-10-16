@@ -60,5 +60,13 @@
     "page": "https://xfyang.net/demo_diffusion_prior/",
     "label": "Animated 3D results",
     "alt": "LODS generated lighthouse turntable"
+  },
+  "holocine": {
+    "kind": "video",
+    "src": "https://holo-cine.github.io/cases/highlight/038_seed0.mp4",
+    "poster": "",
+    "page": "https://holo-cine.github.io/",
+    "label": "Multi-shot generation",
+    "alt": "HoloCine multi-shot cinematic video generated in one pass"
   }
 }
