@@ -144,5 +144,58 @@ ul.bullets { margin:0; padding-left:20px; line-height:1.75; }
 ul.bullets li { padding-left:2px; }
 .when { color:#555; font-variant-numeric:tabular-nums; margin-right:2px; }
 .pub-note { color:#666; font-size:13px; margin:10px 0 0; }
-@media (max-width:600px){ .hl { color:#e0362f; font-weight:700; }
+@media (max-width:600px){ .hl { color:#e0362f; font-weight:700; } }
 #visitor-summary[hidden]{display:none!important;}
+
+/* Interactive cat avatar. The photo's ears touch the top edge, so the photo is
+   shifted down inside the circle; a blurred copy fills the gap above it. */
+.cat-stage{position:relative;max-width:220px;margin:auto;cursor:pointer;-webkit-tap-highlight-color:transparent;outline:none;user-select:none;-webkit-user-select:none;}
+.cat-stage:focus-visible .avatar-crop{box-shadow:0 0 0 3px #f09228;}
+.cat-lean{transition:transform .35s cubic-bezier(.3,1.4,.5,1);transform:translate(var(--lean-x,0),var(--lean-y,0)) rotate(var(--lean-r,0deg));}
+.cat-stage .avatar-crop{position:relative;max-width:none;-webkit-mask-image:-webkit-radial-gradient(white,black);}
+.cat-stage .avatar-crop::before{content:""!important;display:block!important;position:absolute;inset:-10%;background:url("assets/orange-white-cat.png") 50% 0/cover;filter:blur(10px);z-index:0;}
+.cat-stage .avatar-img,.cat-layer{position:absolute;inset:0;width:100%;height:100%;border-radius:0;object-fit:cover;transform:translateY(7%)!important;}
+.cat-stage .avatar-img{z-index:1;-webkit-mask-image:linear-gradient(to bottom,transparent 0,#000 6%);mask-image:linear-gradient(to bottom,transparent 0,#000 6%);}
+.cat-layer{z-index:2;pointer-events:none;}
+
+/* Overlays, positioned in photo coordinates (percent of the 1254px source). */
+.cat-lid{position:absolute;width:5.8%;height:4.8%;box-sizing:border-box;border-radius:50% 50% 45% 45%;background:linear-gradient(#c79a73,#d4ab86);border-bottom:1.5px solid rgba(60,35,20,.75);box-shadow:0 0 2px 1px rgba(205,163,126,.8);transform-origin:50% 0;transform:rotate(16deg) scaleY(0);}
+.cat-lid-l{left:49.3%;top:18.5%;}
+.cat-lid-r{left:59.9%;top:21.5%;}
+.cat-stage.blink .cat-lid{animation:cat-blink .28s ease-in-out 2;}
+.cat-stage.squint .cat-lid{transition:transform .2s;transform:rotate(16deg) scaleY(.85);}
+.cat-blush{position:absolute;width:7%;height:3.6%;border-radius:50%;background:rgba(255,105,135,.55);filter:blur(3px);opacity:0;transition:opacity .3s;transform:rotate(16deg);}
+.cat-blush-l{left:45.5%;top:26.5%;}
+.cat-blush-r{left:62%;top:30%;}
+.cat-stage.blush .cat-blush{opacity:1;}
+.cat-glasses{position:absolute;left:46.7%;top:18.5%;width:21.6%;height:auto;overflow:visible;fill:rgba(220,240,255,.18);stroke:#1f1f1f;stroke-width:3.5;stroke-linecap:round;opacity:0;transform:translateY(-60%) rotate(16deg);transition:opacity .2s,transform .35s cubic-bezier(.3,1.5,.5,1);}
+.cat-stage.glasses .cat-glasses{opacity:1;transform:translateY(0) rotate(16deg);}
+
+/* Whole-avatar moves. */
+.cat-stage .avatar-crop.a-hop{animation:cat-hop .55s cubic-bezier(.3,.7,.4,1);}
+.cat-stage .avatar-crop.a-wiggle{animation:cat-wiggle .6s ease-in-out;}
+.cat-stage .avatar-crop.a-squish{animation:cat-squish .45s ease-out;}
+.cat-stage .avatar-crop.a-shake{animation:cat-shake .5s linear;}
+.cat-stage .avatar-crop.a-purr{animation:cat-purr .09s linear 12;}
+.cat-stage .avatar-crop.a-tilt{animation:cat-tilt 1s ease-in-out;}
+.cat-stage .avatar-crop.a-spin{animation:cat-spin .8s cubic-bezier(.5,0,.3,1);}
+.cat-stage .avatar-crop.a-nod{animation:cat-nod .7s ease-in-out;}
+@keyframes cat-blink{0%,100%{transform:rotate(16deg) scaleY(0)}50%{transform:rotate(16deg) scaleY(1)}}
+@keyframes cat-hop{0%,100%{transform:translateY(0)}35%{transform:translateY(-16px) scale(1.02,.98)}70%{transform:translateY(0) scale(1.04,.95)}}
+@keyframes cat-wiggle{0%,100%{transform:rotate(0)}20%{transform:rotate(-6deg)}45%{transform:rotate(5deg)}70%{transform:rotate(-3deg)}}
+@keyframes cat-squish{0%,100%{transform:scale(1)}30%{transform:scale(1.08,.9)}60%{transform:scale(.96,1.05)}}
+@keyframes cat-shake{0%,100%{transform:translateX(0)}15%,55%{transform:translateX(-7px)}35%,75%{transform:translateX(7px)}}
+@keyframes cat-purr{0%,100%{transform:translate(0,0)}25%{transform:translate(.8px,-.6px)}75%{transform:translate(-.8px,.6px)}}
+@keyframes cat-tilt{0%,100%{transform:rotate(0)}30%,70%{transform:rotate(-12deg)}}
+@keyframes cat-spin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}
+@keyframes cat-nod{0%,100%{transform:translateY(0)}25%,75%{transform:translateY(5px)}50%{transform:translateY(-2px)}}
+
+/* Speech bubble and floating particles. */
+.cat-bubble{position:absolute;left:50%;bottom:calc(100% - 6px);z-index:5;max-width:200px;width:max-content;padding:6px 11px;border-radius:14px;background:#fff;border:1px solid #e3d6c6;box-shadow:0 3px 10px rgba(80,50,20,.12);color:#5a3d22;font-size:13px;line-height:1.35;text-align:center;pointer-events:none;opacity:0;transform:translate(-50%,6px) scale(.9);transition:opacity .18s,transform .25s cubic-bezier(.3,1.5,.5,1);}
+.cat-bubble::after{content:"";position:absolute;left:50%;top:100%;margin-left:-6px;border:6px solid transparent;border-top-color:#fff;filter:drop-shadow(0 1px 0 #e3d6c6);}
+.cat-bubble.show{opacity:1;transform:translate(-50%,0) scale(1);}
+.cat-fx{position:absolute;inset:0;pointer-events:none;z-index:4;overflow:visible;}
+.cat-fx span{position:absolute;font-size:18px;line-height:1;animation:cat-float 1.3s ease-out forwards;}
+@keyframes cat-float{0%{opacity:0;transform:translate(-50%,-50%) scale(.4)}15%{opacity:1;transform:translate(-50%,-50%) scale(1.1)}100%{opacity:0;transform:translate(calc(-50% + var(--dx,0px)),calc(-50% - 70px)) rotate(var(--rot,0deg)) scale(.9)}}
+@media(max-width:600px){.cat-stage{max-width:200px;margin-top:34px}}
+@media(prefers-reduced-motion:reduce){.cat-stage .avatar-crop[class*="a-"]{animation:none!important}.cat-lean{transition:none}.cat-fx span{animation-duration:.01s}}
